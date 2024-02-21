@@ -17,12 +17,43 @@
   </select>
 </div>
 </div>*/
-import React from "react";
+import { useEffect, useState } from "react";
 import "../styles/AllParkings.css";
 import carData from "../assets/dummy-data/ParkingAll.js";
 import CarItem from "../components/UI/CarItem";
 
+import io from "socket.io-client";
+import { databaseRef } from "../firebase-config.js";
+import { getDatabase, ref, get, child } from "firebase/database";
+
+const socket = io.connect(process.env.REACT_APP_SERVER_URL);
+
 const Bookings = () => {
+
+  const [messages, setMessages] = useState([]);
+  const [slots, setSlots] = useState([
+    { id: "PLT0001", status: false },
+    { id: "PLT0002", status: false },
+
+  ]);
+  const dbRef = ref(getDatabase());
+  get(child(dbRef, `Slot_available/availability`)).then((snapshot) => {
+    if (snapshot.exists()) {
+
+
+      // Corrected usage of setSlots to update only the first slot
+      setSlots(prevSlots => [
+        { ...prevSlots[0], status: snapshot.val() },
+        ...prevSlots.slice(1) // Keep the rest of the slots unchanged
+      ]);
+    } else {
+      console.log("No data available");
+    }
+  }).catch((error) => {
+    console.error(error);
+  });
+
+
   return (
     <div className="AllParkings">
       <div className="AllParkings__wrapper">
